@@ -3,10 +3,11 @@ import React, { useState } from "react";
 import {
   View,
   Text,
-  StyleSheet,
   Pressable,
   SafeAreaView,
 } from "react-native";
+import { styles } from "./App.styles";
+import { levels } from "./levels";
 
 type Point = { x: number; y: number };
 
@@ -16,52 +17,65 @@ type GameState = {
   moves: number;
 };
 
-const LEVEL = [
-  "#########",
-  "#   .   #",
-  "#   $   #",
-  "#   @   #",
-  "#       #",
-  "#########",
-];
+function createGameState(levelMap: readonly string[]): GameState {
+  if (levelMap.length === 0 || levelMap[0].length === 0) {
+    throw new Error("A level map must not be empty.");
+  }
 
-const DIRECTIONS = {
-  up: { x: 0, y: -1 },
-  down: { x: 0, y: 1 },
-  left: { x: -1, y: 0 },
-  right: { x: 1, y: 0 },
-};
+  const width = levelMap[0].length;
+  if (levelMap.some(row => row.length !== width)) {
+    throw new Error("Every row in a level map must have the same width.");
+  }
 
-function createLevel(): GameState {
-  let player = { x: 0, y: 0 };
+  let player: Point | undefined;
+  let playerCount = 0;
+  let targetCount = 0;
   const boxes: Point[] = [];
 
-  LEVEL.forEach((row, y) => {
+  levelMap.forEach((row, y) => {
     [...row].forEach((cell, x) => {
-      if (cell === "@") player = { x, y };
+      if (!"# .$@".includes(cell)) {
+        throw new Error(`Unknown cell "${cell}" in level map.`);
+      }
+
+      if (cell === "@") {
+        player = { x, y };
+        playerCount++;
+      }
       if (cell === "$") boxes.push({ x, y });
+      if (cell === ".") targetCount++;
     });
   });
 
+  if (playerCount !== 1 || player === undefined) {
+    throw new Error("A level map must contain exactly one player.");
+  }
+  if (boxes.length === 0 || boxes.length !== targetCount) {
+    throw new Error("A level map must contain the same nonzero number of boxes and targets.");
+  }
+
   return { player, boxes, moves: 0 };
 }
-
 export default function App() {
-  const [game, setGame] = useState(createLevel);
+  const [levelIndex, setLevelIndex] = useState(0);
+  const level = levels[levelIndex];
+  const [game, setGame] = useState(() => createGameState(level.map));
   const [history, setHistory] = useState<GameState[]>([]);
 
   const isWall = (x: number, y: number) =>
-    LEVEL[y]?.[x] === "#" || LEVEL[y]?.[x] === undefined;
+    level.map[y]?.[x] === "#" || level.map[y]?.[x] === undefined;
 
   const hasBox = (x: number, y: number) =>
     game.boxes.some(b => b.x === x && b.y === y);
 
   const isTarget = (x: number, y: number) =>
-    LEVEL[y]?.[x] === ".";
+    level.map[y]?.[x] === ".";
 
   const won =
     game.boxes.length > 0 &&
     game.boxes.every(b => isTarget(b.x, b.y));
+  const isLastLevel = levelIndex === levels.length - 1;
+  const boardWidth = Math.max(...level.map.map(row => row.length));
 
   function move(dx: number, dy: number) {
     if (won) return;
@@ -99,7 +113,22 @@ export default function App() {
   }
 
   function restart() {
-    setGame(createLevel());
+    setGame(createGameState(level.map));
+    setHistory([]);
+  }
+
+  function advanceLevel() {
+    if (!won || isLastLevel) return;
+
+    const nextLevelIndex = levelIndex + 1;
+    setLevelIndex(nextLevelIndex);
+    setGame(createGameState(levels[nextLevelIndex].map));
+    setHistory([]);
+  }
+
+  function replayCampaign() {
+    setLevelIndex(0);
+    setGame(createGameState(levels[0].map));
     setHistory([]);
   }
 
@@ -138,12 +167,13 @@ export default function App() {
   return (
     <SafeAreaView style={styles.container}>
       <Text style={styles.logo}>📦 SOKOBAN</Text>
-      <Text style={styles.subtitle}>THE CRATE QUEST</Text>
 
       <View style={styles.stats}>
         <View style={styles.stat}>
           <Text style={styles.statLabel}>LEVEL</Text>
-          <Text style={styles.statValue}>01</Text>
+          <Text style={styles.statValue}>
+            {String(levelIndex + 1).padStart(2, "0")}
+          </Text>
         </View>
         <View style={styles.stat}>
           <Text style={styles.statLabel}>MOVES</Text>
@@ -158,8 +188,10 @@ export default function App() {
         </View>
       </View>
 
-      <View style={styles.board}>
-        {LEVEL.map((row, y) => (
+      <Text style={styles.subtitle}>{level.name.toUpperCase()}</Text>
+
+      <View style={[styles.board, { aspectRatio: boardWidth / level.map.length }]}>
+        {level.map.map((row, y) => (
           <View key={y} style={styles.row}>
             {[...row].map((_, x) => renderCell(x, y))}
           </View>
@@ -168,10 +200,20 @@ export default function App() {
 
       {won ? (
         <View style={styles.win}>
-          <Text style={styles.winText}>🎉 LEVEL COMPLETED!</Text>
-          <Text style={styles.subtitle}>
-            Great job! You solved the puzzle.
+          <Text style={styles.winText}>
+            {isLastLevel ? "🏆 ALL LEVELS COMPLETE!" : "🎉 LEVEL COMPLETED!"}
           </Text>
+          <Text style={styles.subtitle}>
+            {isLastLevel ? "You solved every puzzle!" : "Ready for the next one?"}
+          </Text>
+          <Pressable
+            style={styles.nextLevelButton}
+            onPress={isLastLevel ? replayCampaign : advanceLevel}
+          >
+            <Text style={styles.nextLevelText}>
+              {isLastLevel ? "PLAY AGAIN" : "NEXT LEVEL →"}
+            </Text>
+          </Pressable>
         </View>
       ) : (
         <Text style={styles.instruction}>
@@ -215,143 +257,3 @@ export default function App() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#17251F",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 16,
-  },
-  logo: {
-    fontSize: 32,
-    fontWeight: "900",
-    color: "#F5D99A",
-    letterSpacing: 3,
-  },
-  subtitle: {
-    color: "#A9B9A8",
-    fontSize: 12,
-    letterSpacing: 3,
-    marginTop: 5,
-  },
-  stats: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    width: "100%",
-    marginVertical: 25,
-  },
-  stat: {
-    backgroundColor: "#263A30",
-    padding: 12,
-    borderRadius: 12,
-    width: "29%",
-    alignItems: "center",
-  },
-  statLabel: {
-    color: "#A9B9A8",
-    fontSize: 10,
-  },
-  statValue: {
-    color: "#F5D99A",
-    fontSize: 22,
-    fontWeight: "bold",
-    marginTop: 5,
-  },
-  board: {
-    width: "100%",
-    maxWidth: 360,
-    aspectRatio: 9 / 6,
-    backgroundColor: "#263A30",
-    padding: 5,
-    borderRadius: 12,
-  },
-  row: {
-    flex: 1,
-    flexDirection: "row",
-  },
-  cell: {
-    flex: 1,
-    margin: 1,
-    borderRadius: 5,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  wall: {
-    backgroundColor: "#55745A",
-    borderWidth: 1,
-    borderColor: "#78936C",
-  },
-  floor: {
-    backgroundColor: "#D7C49B",
-  },
-  target: {
-    backgroundColor: "#E5B96C",
-  },
-  box: {
-    backgroundColor: "#A76B3F",
-    borderWidth: 2,
-    borderColor: "#704326",
-  },
-  player: {
-    fontSize: 23,
-  },
-  boxEmoji: {
-    fontSize: 21,
-  },
-  targetEmoji: {
-    fontSize: 15,
-  },
-  instruction: {
-    color: "#D8E4D4",
-    marginTop: 25,
-    fontSize: 14,
-  },
-  controls: {
-    alignItems: "center",
-    marginTop: 20,
-  },
-  middleControls: {
-    flexDirection: "row",
-    gap: 14,
-    marginTop: 8,
-  },
-  arrow: {
-    width: 65,
-    height: 55,
-    borderRadius: 14,
-    backgroundColor: "#D9A85F",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  arrowText: {
-    color: "#263A30",
-    fontSize: 25,
-    fontWeight: "bold",
-  },
-  actions: {
-    flexDirection: "row",
-    gap: 15,
-    marginTop: 20,
-  },
-  actionButton: {
-    backgroundColor: "#314A3B",
-    paddingVertical: 13,
-    paddingHorizontal: 22,
-    borderRadius: 12,
-  },
-  actionText: {
-    color: "#F5D99A",
-    fontWeight: "bold",
-  },
-  win: {
-    alignItems: "center",
-    marginTop: 20,
-  },
-  winText: {
-    color: "#F5D99A",
-    fontSize: 18,
-    fontWeight: "bold",
-  },
-});
