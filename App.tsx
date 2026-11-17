@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -120,6 +120,36 @@ export default function App() {
       moves: game.moves + 1,
     });
   }
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    function handleKeyDown(event: KeyboardEvent) {
+      let direction: Point | undefined;
+      switch (event.key) {
+        case "ArrowUp":
+          direction = { x: 0, y: -1 };
+          break;
+        case "ArrowDown":
+          direction = { x: 0, y: 1 };
+          break;
+        case "ArrowLeft":
+          direction = { x: -1, y: 0 };
+          break;
+        case "ArrowRight":
+          direction = { x: 1, y: 0 };
+          break;
+        default:
+          return;
+      }
+
+      event.preventDefault();
+      move(direction.x, direction.y);
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [game, level, won]);
 
   function restart() {
     setGame(createGameState(level.map));
@@ -261,7 +291,7 @@ export default function App() {
         </View>
       ) : (
         <Text style={styles.instruction}>
-          Push all boxes onto the targets!
+          Use the arrow keys or on-screen controls to push all boxes onto the targets!
         </Text>
       )}
 
