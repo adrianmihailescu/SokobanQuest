@@ -6,6 +6,7 @@ import {
   Image,
   Pressable,
   SafeAreaView,
+  Platform,
 } from "react-native";
 import { styles } from "./App.styles";
 import { levels } from "./levels";
@@ -122,7 +123,7 @@ export default function App() {
   }
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (Platform.OS !== "web" || typeof window === "undefined") return;
 
     function handleKeyDown(event: KeyboardEvent) {
       let direction: Point | undefined;
