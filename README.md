@@ -35,6 +35,7 @@ npm run typecheck
 - `index.tsx` registers the root component with Expo.
 - `App.tsx` renders the game and manages the active level, player and box positions, move history, win detection, and campaign progression.
 - `App.styles.ts` holds the React Native `StyleSheet` definitions for the screen.
+- `assets/game/` contains the transparent PNG characters and game icons used by the board and win screen.
 - `levels/types.ts` defines the shared level data shape.
 - `levels/level-NN.ts` contains one level's name and map.
 - `levels/index.ts` assembles the levels in campaign order.

@@ -8,6 +8,15 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 16,
   },
+  logoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  logoIcon: {
+    width: 32,
+    height: 32,
+  },
   logo: {
     fontSize: 32,
     fontWeight: "900",
@@ -78,14 +87,17 @@ export const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#704326",
   },
-  player: {
-    fontSize: 23,
+  playerIcon: {
+    width: 23,
+    height: 23,
   },
-  boxEmoji: {
-    fontSize: 21,
+  boxIcon: {
+    width: 21,
+    height: 21,
   },
-  targetEmoji: {
-    fontSize: 15,
+  targetIcon: {
+    width: 15,
+    height: 15,
   },
   instruction: {
     color: "#D8E4D4",
@@ -132,6 +144,15 @@ export const styles = StyleSheet.create({
   win: {
     alignItems: "center",
     marginTop: 20,
+  },
+  winHeading: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  winIcon: {
+    width: 22,
+    height: 22,
   },
   winText: {
     color: "#F5D99A",

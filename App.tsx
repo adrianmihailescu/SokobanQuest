@@ -3,11 +3,20 @@ import React, { useState } from "react";
 import {
   View,
   Text,
+  Image,
   Pressable,
   SafeAreaView,
 } from "react-native";
 import { styles } from "./App.styles";
 import { levels } from "./levels";
+
+const GAME_ICONS = {
+  player: require("./assets/game/player.png"),
+  box: require("./assets/game/box.png"),
+  target: require("./assets/game/target.png"),
+  celebration: require("./assets/game/celebration.png"),
+  trophy: require("./assets/game/trophy.png"),
+};
 
 type Point = { x: number; y: number };
 
@@ -156,17 +165,44 @@ export default function App() {
           box && styles.box,
         ]}
       >
-        {player && <Text style={styles.player}>🧑</Text>}
-        {box && <Text style={styles.boxEmoji}>📦</Text>}
+        {player && (
+          <Image
+            source={GAME_ICONS.player}
+            style={styles.playerIcon}
+            resizeMode="contain"
+            accessibilityLabel="Player"
+          />
+        )}
+        {box && (
+          <Image
+            source={GAME_ICONS.box}
+            style={styles.boxIcon}
+            resizeMode="contain"
+            accessibilityLabel="Box"
+          />
+        )}
         {target && !box && !player &&
-          <Text style={styles.targetEmoji}>🎯</Text>}
+          <Image
+            source={GAME_ICONS.target}
+            style={styles.targetIcon}
+            resizeMode="contain"
+            accessibilityLabel="Target"
+          />}
       </View>
     );
   }
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.logo}>📦 SOKOBAN</Text>
+      <View style={styles.logoRow}>
+        <Image
+          source={GAME_ICONS.box}
+          style={styles.logoIcon}
+          resizeMode="contain"
+          accessibilityLabel="Box"
+        />
+        <Text style={styles.logo}>SOKOBAN</Text>
+      </View>
 
       <View style={styles.stats}>
         <View style={styles.stat}>
@@ -200,9 +236,17 @@ export default function App() {
 
       {won ? (
         <View style={styles.win}>
-          <Text style={styles.winText}>
-            {isLastLevel ? "🏆 ALL LEVELS COMPLETE!" : "🎉 LEVEL COMPLETED!"}
-          </Text>
+          <View style={styles.winHeading}>
+            <Image
+              source={isLastLevel ? GAME_ICONS.trophy : GAME_ICONS.celebration}
+              style={styles.winIcon}
+              resizeMode="contain"
+              accessibilityLabel={isLastLevel ? "Trophy" : "Celebration"}
+            />
+            <Text style={styles.winText}>
+              {isLastLevel ? "ALL LEVELS COMPLETE!" : "LEVEL COMPLETED!"}
+            </Text>
+          </View>
           <Text style={styles.subtitle}>
             {isLastLevel ? "You solved every puzzle!" : "Ready for the next one?"}
           </Text>
