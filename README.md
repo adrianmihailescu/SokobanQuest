@@ -8,4 +8,4 @@ A blank React Native app powered by Expo and compatible with Expo Go.
 2. Start the development server with `npm start`.
 3. Scan the QR code with Expo Go on your phone.
 
-Edit `App.js` to start building the app.
+Edit `App.tsx` to start building the app. TypeScript is enabled; use `.tsx` for components with JSX and `.ts` for TypeScript files without JSX.
