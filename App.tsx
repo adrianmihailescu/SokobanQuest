@@ -10,6 +10,7 @@ import {
 } from "react-native";
 import { styles } from "./App.styles";
 import { levels } from "./levels";
+import type { GameState, Point } from "./types/game";
 
 const GAME_ICONS = {
   player: require("./assets/game/player.png"),
@@ -17,14 +18,6 @@ const GAME_ICONS = {
   target: require("./assets/game/target.png"),
   celebration: require("./assets/game/celebration.png"),
   trophy: require("./assets/game/trophy.png"),
-};
-
-type Point = { x: number; y: number };
-
-type GameState = {
-  player: Point;
-  boxes: Point[];
-  moves: number;
 };
 
 function createGameState(levelMap: readonly string[]): GameState {
