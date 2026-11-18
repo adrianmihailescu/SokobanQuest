@@ -128,10 +128,18 @@ export const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-  arrowText: {
-    color: "#263A30",
-    fontSize: 25,
-    fontWeight: "bold",
+  arrowIcon: {
+    width: 30,
+    height: 30,
+  },
+  arrowLeft: {
+    transform: [{ rotate: "270deg" }],
+  },
+  arrowDown: {
+    transform: [{ rotate: "180deg" }],
+  },
+  arrowRight: {
+    transform: [{ rotate: "90deg" }],
   },
   actions: {
     flexDirection: "row",
@@ -159,9 +167,8 @@ export const styles = StyleSheet.create({
   },
   editorButtonText: {
     color: "#F5D99A",
-    fontSize: 9,
+    fontSize: 14,
     fontWeight: "bold",
-    letterSpacing: 0.3,
   },
   disabledEditorButton: {
     opacity: 0.45,

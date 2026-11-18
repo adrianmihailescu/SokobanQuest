@@ -19,14 +19,17 @@ export const editorStyles = StyleSheet.create({
   },
   backButton: {
     alignSelf: "flex-start",
-    paddingVertical: 8,
+    backgroundColor: "#314A3B",
+    borderRadius: 9,
+    paddingVertical: 10,
+    paddingHorizontal: 10,
     marginBottom: 14,
   },
-  backText: {
-    color: "#D9A85F",
-    fontSize: 13,
+  levelActionText: {
+    color: "#F5D99A",
+    fontSize: 10,
     fontWeight: "800",
-    letterSpacing: 1,
+    letterSpacing: 0.3,
   },
   eyebrow: {
     color: "#D9A85F",
@@ -111,12 +114,6 @@ export const editorStyles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 10,
   },
-  restartLevelButtonText: {
-    color: "#F5D99A",
-    fontSize: 10,
-    fontWeight: "900",
-    letterSpacing: 0.4,
-  },
   editLevelButton: {
     height: 38,
     borderRadius: 10,
@@ -124,12 +121,6 @@ export const editorStyles = StyleSheet.create({
     paddingHorizontal: 9,
     alignItems: "center",
     justifyContent: "center",
-  },
-  editLevelButtonText: {
-    color: "#F5D99A",
-    fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 0.2,
   },
   iconButton: {
     width: 38,
@@ -334,11 +325,23 @@ export const editorStyles = StyleSheet.create({
     marginTop: 12,
   },
   primaryButton: {
+    flex: 1,
     backgroundColor: "#D9A85F",
     borderRadius: 12,
     paddingVertical: 14,
     alignItems: "center",
+  },
+  formActions: {
+    flexDirection: "row",
+    gap: 10,
     marginTop: 16,
+  },
+  cancelEditButton: {
+    flex: 1,
+    backgroundColor: "#314A3B",
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: "center",
   },
   primaryButtonText: {
     color: "#263A30",

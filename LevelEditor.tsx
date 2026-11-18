@@ -87,6 +87,12 @@ export function LevelEditor({
     setMessage("");
   }
 
+  function cancelEditing() {
+    setEditingIndex(null);
+    setIsEditingDraft(false);
+    setMessage("");
+  }
+
   function updateDimensions(axis: "width" | "height", delta: number) {
     const height = draft.map.length;
     const width = draft.map[0].length;
@@ -160,15 +166,6 @@ export function LevelEditor({
     return (
       <ScrollView style={styles.scroll} contentContainerStyle={styles.screen}>
         <View style={styles.header}>
-          <Pressable
-            onPress={() => {
-              setEditingIndex(null);
-              setIsEditingDraft(false);
-            }}
-            style={styles.backButton}
-          >
-            <Text style={styles.backText}>‹  LEVELS</Text>
-          </Pressable>
           <Text style={styles.eyebrow}>{isNewLevel ? "NEW PUZZLE" : "EDIT PUZZLE"}</Text>
           <Text style={styles.title}>{isNewLevel ? "Create a level" : "Shape your level"}</Text>
         </View>
@@ -266,14 +263,24 @@ export function LevelEditor({
           <Text style={styles.hint}>One player, and matching boxes and targets, are required.</Text>
         )}
 
-        <Pressable
-          accessibilityRole="button"
-          disabled={isSaving}
-          onPress={saveLevel}
-          style={[styles.primaryButton, isSaving && styles.disabledButton]}
-        >
-          <Text style={styles.primaryButtonText}>{isSaving ? "SAVING…" : "SAVE LEVEL"}</Text>
-        </Pressable>
+        <View style={styles.formActions}>
+          <Pressable
+            accessibilityRole="button"
+            disabled={isSaving}
+            onPress={cancelEditing}
+            style={[styles.cancelEditButton, isSaving && styles.disabledButton]}
+          >
+            <Text style={styles.levelActionText}>CANCEL</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            disabled={isSaving}
+            onPress={saveLevel}
+            style={[styles.primaryButton, isSaving && styles.disabledButton]}
+          >
+            <Text style={styles.primaryButtonText}>{isSaving ? "SAVING…" : "SAVE LEVEL"}</Text>
+          </Pressable>
+        </View>
       </ScrollView>
     );
   }
@@ -282,7 +289,7 @@ export function LevelEditor({
     <ScrollView style={styles.scroll} contentContainerStyle={styles.screen}>
       <View style={styles.header}>
         <Pressable onPress={onClose} style={styles.backButton}>
-          <Text style={styles.backText}>‹  BACK TO GAME</Text>
+          <Text style={styles.levelActionText}>BACK TO GAME</Text>
         </Pressable>
         <Text style={styles.eyebrow}>YOUR PUZZLE LIBRARY</Text>
         <Text style={styles.title}>Level editor</Text>
@@ -316,14 +323,14 @@ export function LevelEditor({
               onPress={() => onPlayLevel(index)}
               style={styles.restartLevelButton}
             >
-              <Text style={styles.restartLevelButtonText}>RESTART LEVEL</Text>
+              <Text style={styles.levelActionText}>RESTART LEVEL</Text>
             </Pressable>
             <Pressable
               accessibilityLabel={`Edit ${level.name}`}
               onPress={() => startEditing(index)}
               style={styles.editLevelButton}
             >
-              <Text style={styles.editLevelButtonText}>EDIT LEVEL</Text>
+              <Text style={styles.levelActionText}>EDIT LEVEL</Text>
             </Pressable>
             <Pressable
               accessibilityLabel={`Delete ${level.name}`}

@@ -22,6 +22,7 @@ const GAME_ICONS = {
   player: require("./assets/game/player.png"),
   box: require("./assets/game/box.png"),
   target: require("./assets/game/target.png"),
+  arrow: require("./assets/game/arrow.png"),
   celebration: require("./assets/game/celebration.png"),
   trophy: require("./assets/game/trophy.png"),
 };
@@ -421,25 +422,45 @@ export default function App() {
       )}
 
       <View style={styles.controls}>
-        <Pressable style={styles.arrow}
+        <Pressable accessibilityLabel="Move up" style={styles.arrow}
           onPress={() => move(0, -1)}>
-          <Text style={styles.arrowText}>▲</Text>
+          <Image
+            source={GAME_ICONS.arrow}
+            style={styles.arrowIcon}
+            resizeMode="contain"
+            accessibilityLabel="Up arrow"
+          />
         </Pressable>
 
         <View style={styles.middleControls}>
-          <Pressable style={styles.arrow}
+          <Pressable accessibilityLabel="Move left" style={styles.arrow}
             onPress={() => move(-1, 0)}>
-            <Text style={styles.arrowText}>◀</Text>
+            <Image
+              source={GAME_ICONS.arrow}
+              style={[styles.arrowIcon, styles.arrowLeft]}
+              resizeMode="contain"
+              accessibilityLabel="Left arrow"
+            />
           </Pressable>
 
-          <Pressable style={styles.arrow}
+          <Pressable accessibilityLabel="Move down" style={styles.arrow}
             onPress={() => move(0, 1)}>
-            <Text style={styles.arrowText}>▼</Text>
+            <Image
+              source={GAME_ICONS.arrow}
+              style={[styles.arrowIcon, styles.arrowDown]}
+              resizeMode="contain"
+              accessibilityLabel="Down arrow"
+            />
           </Pressable>
 
-          <Pressable style={styles.arrow}
+          <Pressable accessibilityLabel="Move right" style={styles.arrow}
             onPress={() => move(1, 0)}>
-            <Text style={styles.arrowText}>▶</Text>
+            <Image
+              source={GAME_ICONS.arrow}
+              style={[styles.arrowIcon, styles.arrowRight]}
+              resizeMode="contain"
+              accessibilityLabel="Right arrow"
+            />
           </Pressable>
         </View>
       </View>
