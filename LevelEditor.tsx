@@ -112,7 +112,8 @@ export function LevelEditor({
       if (selectedTile === "@") {
         nextMap.forEach((row, rowIndex) => {
           row.forEach((cell, cellIndex) => {
-            if (cell === "@") nextMap[rowIndex][cellIndex] = " ";
+            if (cell === "@")
+              nextMap[rowIndex][cellIndex] = " ";
           });
         });
       }

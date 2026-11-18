@@ -237,7 +237,8 @@ export default function App() {
 
   async function saveLevel(index: number | null, updatedLevel: LevelDefinition) {
     const updatedLevels = [...levels];
-    if (index === null) updatedLevels.push(updatedLevel);
+    if (index === null)
+      updatedLevels.push(updatedLevel);
     else updatedLevels[index] = updatedLevel;
 
     try {
