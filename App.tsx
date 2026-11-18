@@ -5,12 +5,18 @@ import {
   Text,
   Image,
   Pressable,
-  SafeAreaView,
   Platform,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { styles } from "./App.styles";
-import { levels } from "./levels";
+import { levels as bundledLevels } from "./levels";
+import { LevelEditor } from "./LevelEditor";
+import type { LevelDefinition } from "./levels/types";
+import { validateLevelMap } from "./levels/validation";
 import type { GameState, Point } from "./types/game";
+
+const LEVELS_STORAGE_KEY = "sokobanquest.levels.v1";
 
 const GAME_ICONS = {
   player: require("./assets/game/player.png"),
@@ -21,49 +27,100 @@ const GAME_ICONS = {
 };
 
 function createGameState(levelMap: readonly string[]): GameState {
-  if (levelMap.length === 0 || levelMap[0].length === 0) {
-    throw new Error("A level map must not be empty.");
-  }
-
-  const width = levelMap[0].length;
-  if (levelMap.some(row => row.length !== width)) {
-    throw new Error("Every row in a level map must have the same width.");
-  }
+  const validationError = validateLevelMap(levelMap);
+  if (validationError) throw new Error(validationError);
 
   let player: Point | undefined;
-  let playerCount = 0;
-  let targetCount = 0;
   const boxes: Point[] = [];
 
   levelMap.forEach((row, y) => {
     [...row].forEach((cell, x) => {
-      if (!"# .$@".includes(cell)) {
-        throw new Error(`Unknown cell "${cell}" in level map.`);
-      }
-
       if (cell === "@") {
         player = { x, y };
-        playerCount++;
       }
       if (cell === "$") boxes.push({ x, y });
-      if (cell === ".") targetCount++;
     });
   });
 
-  if (playerCount !== 1 || player === undefined) {
-    throw new Error("A level map must contain exactly one player.");
-  }
-  if (boxes.length === 0 || boxes.length !== targetCount) {
-    throw new Error("A level map must contain the same nonzero number of boxes and targets.");
-  }
-
+  if (player === undefined) throw new Error("A level map must contain exactly one player.");
   return { player, boxes, moves: 0 };
 }
+
+function readStoredLevels(serialized: string): LevelDefinition[] {
+  const parsed: unknown = JSON.parse(serialized);
+  if (!Array.isArray(parsed) || parsed.length === 0) {
+    throw new Error("Saved levels must be a non-empty list.");
+  }
+
+  return parsed.map((item, index) => {
+    if (
+      typeof item !== "object" ||
+      item === null ||
+      !("name" in item) ||
+      typeof item.name !== "string" ||
+      !("map" in item) ||
+      !Array.isArray(item.map) ||
+      !item.map.every((row: unknown) => typeof row === "string")
+    ) {
+      throw new Error(`Saved level ${index + 1} has an invalid format.`);
+    }
+
+    const validationError = validateLevelMap(item.map);
+    if (validationError) {
+      throw new Error(`Saved level ${index + 1}: ${validationError}`);
+    }
+    return { name: item.name, map: [...item.map] };
+  });
+}
 export default function App() {
+  const [levels, setLevels] = useState<LevelDefinition[]>(() =>
+    bundledLevels.map(level => ({ name: level.name, map: [...level.map] }))
+  );
   const [levelIndex, setLevelIndex] = useState(0);
+  const [screen, setScreen] = useState<"game" | "editor">("game");
+  const [levelsReady, setLevelsReady] = useState(false);
+  const [storageError, setStorageError] = useState("");
   const level = levels[levelIndex];
   const [game, setGame] = useState(() => createGameState(level.map));
   const [history, setHistory] = useState<GameState[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    AsyncStorage.getItem(LEVELS_STORAGE_KEY)
+      .then(serialized => {
+        if (!active || serialized === null)
+          return;
+        try {
+          setLevels(readStoredLevels(serialized));
+        } catch (error) {
+          setStorageError(
+            error instanceof Error ? error.message : "Saved levels could not be read."
+          );
+        }
+      })
+      .catch(error => {
+        if (active) {
+          setStorageError(
+            error instanceof Error ? error.message : "Saved levels could not be read."
+          );
+        }
+      })
+      .finally(() => {
+        if (active)
+          setLevelsReady(true);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const activeIndex = Math.min(levelIndex, levels.length - 1);
+    if (activeIndex !== levelIndex) setLevelIndex(activeIndex);
+    setGame(createGameState(levels[activeIndex].map));
+    setHistory([]);
+  }, [levels]);
 
   const isWall = (x: number, y: number) =>
     level.map[y]?.[x] === "#" || level.map[y]?.[x] === undefined;
@@ -81,12 +138,14 @@ export default function App() {
   const boardWidth = Math.max(...level.map.map(row => row.length));
 
   function move(dx: number, dy: number) {
-    if (won) return;
+    if (won)
+      return;
 
     const nx = game.player.x + dx;
     const ny = game.player.y + dy;
 
-    if (isWall(nx, ny)) return;
+    if (isWall(nx, ny))
+      return;
 
     const boxIndex = game.boxes.findIndex(
       b => b.x === nx && b.y === ny
@@ -116,7 +175,8 @@ export default function App() {
   }
 
   useEffect(() => {
-    if (Platform.OS !== "web" || typeof window === "undefined") return;
+    if (screen !== "game" || Platform.OS !== "web" || typeof window === "undefined")
+      return;
 
     function handleKeyDown(event: KeyboardEvent) {
       let direction: Point | undefined;
@@ -143,7 +203,7 @@ export default function App() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [game, level, won]);
+  }, [game, level, screen, won]);
 
   function restart() {
     setGame(createGameState(level.map));
@@ -151,7 +211,8 @@ export default function App() {
   }
 
   function advanceLevel() {
-    if (!won || isLastLevel) return;
+    if (!won || isLastLevel)
+      return;
 
     const nextLevelIndex = levelIndex + 1;
     setLevelIndex(nextLevelIndex);
@@ -166,10 +227,70 @@ export default function App() {
   }
 
   function undo() {
-    if (history.length === 0) return;
+    if (history.length === 0)
+      return;
 
     setGame(history[history.length - 1]);
     setHistory(h => h.slice(0, -1));
+  }
+
+  async function saveLevel(index: number | null, updatedLevel: LevelDefinition) {
+    const updatedLevels = [...levels];
+    if (index === null) updatedLevels.push(updatedLevel);
+    else updatedLevels[index] = updatedLevel;
+
+    try {
+      await AsyncStorage.setItem(LEVELS_STORAGE_KEY, JSON.stringify(updatedLevels));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Storage is unavailable.";
+      setStorageError(`Could not save your levels. ${message}`);
+      throw new Error(`Could not save your levels. ${message}`);
+    }
+
+    setStorageError("");
+    setLevels(updatedLevels);
+  }
+
+  async function deleteLevel(index: number) {
+    if (levels.length <= 1)
+      throw new Error("Keep at least one level in your library.");
+    const updatedLevels = levels.filter((_, levelPosition) => levelPosition !== index);
+
+    try {
+      await AsyncStorage.setItem(LEVELS_STORAGE_KEY, JSON.stringify(updatedLevels));
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "Storage is unavailable.";
+      setStorageError(`Could not delete this level. ${message}`);
+      throw new Error(`Could not delete this level. ${message}`);
+    }
+
+    setStorageError("");
+    setLevelIndex(current => Math.min(current, updatedLevels.length - 1));
+    setLevels(updatedLevels);
+  }
+
+  if (screen === "editor") {
+    return (
+      <SafeAreaView style={styles.container}>
+        {storageError ? (
+          <Text accessibilityRole="alert" style={styles.storageError}>
+            {storageError}
+          </Text>
+        ) : null}
+        <LevelEditor
+          levels={levels}
+          onClose={() => setScreen("game")}
+          onPlayLevel={index => {
+            setLevelIndex(index);
+            setGame(createGameState(levels[index].map));
+            setHistory([]);
+            setScreen("game");
+          }}
+          onSaveLevel={saveLevel}
+          onDeleteLevel={deleteLevel}
+        />
+      </SafeAreaView>
+    );
   }
 
   function renderCell(x: number, y: number) {
@@ -219,13 +340,23 @@ export default function App() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.logoRow}>
-        <Image
-          source={GAME_ICONS.box}
-          style={styles.logoIcon}
-          resizeMode="contain"
-          accessibilityLabel="Box"
-        />
-        <Text style={styles.logo}>SOKOBAN</Text>
+        <View style={styles.brand}>
+          <Image
+            source={GAME_ICONS.box}
+            style={styles.logoIcon}
+            resizeMode="contain"
+            accessibilityLabel="Box"
+          />
+          <Text style={styles.logo}>SOKOBAN</Text>
+        </View>
+        <Pressable
+          accessibilityLabel="Edit levels"
+          disabled={!levelsReady}
+          style={[styles.editorButton, !levelsReady && styles.disabledEditorButton]}
+          onPress={() => setScreen("editor")}
+        >
+          <Text style={styles.editorButtonText}>EDIT LEVELS</Text>
+        </Pressable>
       </View>
 
       <View style={styles.stats}>
@@ -315,11 +446,15 @@ export default function App() {
 
       <View style={styles.actions}>
         <Pressable style={styles.actionButton} onPress={undo}>
-          <Text style={styles.actionText}>↶ UNDO</Text>
+          <Text style={styles.actionText}>UNDO</Text>
         </Pressable>
 
-        <Pressable style={styles.actionButton} onPress={restart}>
-          <Text style={styles.actionText}>↻ RESTART</Text>
+        <Pressable
+          accessibilityLabel="Restart this level"
+          style={[styles.actionButton, styles.restartButton]}
+          onPress={restart}
+        >
+          <Text style={styles.actionText}>RESTART GAME</Text>
         </Pressable>
       </View>
     </SafeAreaView>

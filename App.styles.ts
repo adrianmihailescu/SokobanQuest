@@ -11,14 +11,21 @@ export const styles = StyleSheet.create({
   logoRow: {
     flexDirection: "row",
     alignItems: "center",
+    width: "100%",
+    justifyContent: "space-between",
+  },
+  brand: {
+    flexDirection: "row",
+    alignItems: "center",
     gap: 4,
+    flexShrink: 1,
   },
   logoIcon: {
     width: 32,
     height: 32,
   },
   logo: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: "900",
     color: "#F5D99A",
     letterSpacing: 3,
@@ -134,12 +141,38 @@ export const styles = StyleSheet.create({
   actionButton: {
     backgroundColor: "#314A3B",
     paddingVertical: 13,
-    paddingHorizontal: 22,
+    paddingHorizontal: 15,
     borderRadius: 12,
+  },
+  restartButton: {
+    paddingHorizontal: 12,
   },
   actionText: {
     color: "#F5D99A",
     fontWeight: "bold",
+  },
+  editorButton: {
+    backgroundColor: "#263A30",
+    paddingVertical: 8,
+    paddingHorizontal: 7,
+    borderRadius: 10,
+  },
+  editorButtonText: {
+    color: "#F5D99A",
+    fontSize: 9,
+    fontWeight: "bold",
+    letterSpacing: 0.3,
+  },
+  disabledEditorButton: {
+    opacity: 0.45,
+  },
+  storageError: {
+    color: "#F2A18F",
+    fontSize: 12,
+    fontWeight: "700",
+    textAlign: "center",
+    paddingHorizontal: 12,
+    marginBottom: 10,
   },
   win: {
     alignItems: "center",
